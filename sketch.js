@@ -17,6 +17,8 @@ function setup() {
 function draw() {
   background(255);
   fill(220);
+  //rect(0,height-height/4,width,height/4);
+  rect(0,0,20, 20);
   rect(0,height-height/4,width,height/4);
 
   rect(40,0,20, 20);
