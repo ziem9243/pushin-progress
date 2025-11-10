@@ -1,0 +1,5 @@
+Type,Properties,Cost,Quality
+Apartment,2  Bed 2 Bath,200,4
+Apartment,1 Bed 1 Bath,100,3
+House,3 Bed  2 Bath,400,4
+Room,1 Bed shared Bath,0,2

@@ -1,0 +1,10 @@
+Type,Name,Pay,Difficulty
+Medicine,Doctor,10000,5
+Technology,Programmer,7000,3
+Government,Lawyer,9000,5
+Education,Teacher,4000,2
+Service,Cashier,2000,1
+Emergency-Serivce,Firefighter,6000,4
+Emergency-Service,Police,5000,2
+Service,Chef,4000,3
+Performer,Athlete,5000,4
