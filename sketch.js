@@ -73,9 +73,9 @@ function setup() {
     name += random(fNames) + " " + lastName;
   }
   //make dad with random first name
-  append(relationShips, makePerson(int(random(25,40)), int(random(1000,100000)), int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), "Dad", random(mNames) + " " + lastName));
+  append(relationShips, makePerson(int(random(25,40)), int(random(1000,100000)), int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), "Dad", random(mNames) + " " + lastName, "alive"));
   //make mom with random first name
-  append(relationShips, makePerson(int(random(25,40)), int(random(1000,100000)), int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), "Mom", random(fNames) + " " + lastName));
+  append(relationShips, makePerson(int(random(25,40)), int(random(1000,100000)), int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), "Mom", random(fNames) + " " + lastName, "alive"));
   //make siblings with random genders
   for (let i = 0; i < siblings; i++) {
     let gen;
@@ -87,7 +87,7 @@ function setup() {
       gen = random(mNames);
       rel = "Brother";
     }
-    append(relationShips, makePerson(int(random(0,5)), 0, int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), rel, gen + " " + lastName));
+    append(relationShips, makePerson(int(random(0,5)), 0, int(random(10,100)), int(random(10, 100)), int(random(10, 100)), int(random(10, 100)), rel, gen + " " + lastName, "alive"));
   }
   // set all other decisions
   setDecisions();
@@ -193,12 +193,36 @@ function keyPressed() {
     }
     if (age > 30) {
       health -= 1;
+      mentalhealth -= 1;
     }
     if (age > 60) {
       health -= 1;
+      mentalhealth -= 1;
     }
     if (mentalHealth < 50) {
       health -= 1;
+    }
+    for (let r of relationShips) {
+
+      if (r.status == "alive") {
+        if (r.health == 0) {
+          r.status = "dead";
+        }
+        r.age += 1;
+    
+        if (r.age > 30) {
+          r.health -= 1;
+          r.mentalhealth -= 1;
+        }
+        if (r.age > 60) {
+          r.health -= 1;
+          r.mentalhealth -= 1;
+        }
+        if (r.mentalHealth < 50) {
+          r.health -= 1;
+        }
+      }
+      
     }
     //print(health);
     print(skills);
@@ -253,7 +277,7 @@ function drawMenu(info) {
   if (menuOn == 1) { //draws menu for relationships
     let space = 0;
     for (let r of relationShips) {
-      text(r.name + " ; " + r.relation + " ; " + r.age,160,100 + space);
+      text(r.name + " ; " + r.relation + " ; " + r.age + " ; " + r.status,160,100 + space);
       fill(220);
       rect(370,89 + space,70,12,20);
       fill(0);
@@ -365,7 +389,7 @@ function drawMenu(info) {
 
 
 // creates people to interact with the player
-function makePerson(age, money, health, intelligence, looks, mentalHealth, relation, name) {
+function makePerson(age, money, health, intelligence, looks, mentalHealth, relation, name, status) {
   return {
     age:age,
     money:money,
@@ -374,7 +398,8 @@ function makePerson(age, money, health, intelligence, looks, mentalHealth, relat
     looks:looks,
     mentalHealth:mentalHealth,
     relation:relation,
-    name:name
+    name:name,
+    status:status
   }
 }
 
