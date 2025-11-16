@@ -5,6 +5,8 @@ let jobs;
 let education;
 let homes;
 let healthcare;
+let events;
+let result = "";
 
 // lists for various decisions
 let actList = [];
@@ -17,6 +19,7 @@ let gender = "";
 let mNames = [];
 let fNames = [];
 let relationShips = [];// peopleList
+let eventList = [];
 
 let age; // your health will start to drop when you get too old.
 let money; // money will rarely be used
@@ -28,6 +31,8 @@ let name = "";
 let buttons = [];
 let menuOn = -1;
 let moves = 3;
+let currentPrompt = -1;
+let currentResult = -1;
 
 // player variables specific to items they have chosen
 let skills = [];
@@ -39,6 +44,10 @@ let job;
 //helper for mouse click
 let mouseWasPressedLastFrame = false;
 
+// chaos and peace meters
+let chaos;
+let peace;
+
 function preload() {
   people = loadTable("assets/people.csv", "csv", "header");
   activities  = loadTable("assets/activities.csv", "csv", "header");
@@ -46,12 +55,15 @@ function preload() {
   jobs = loadTable("assets/jobs.csv", "csv", "header");
   homes = loadTable("assets/homes.csv", "csv", "header");
   healthcare = loadTable("assets/healthcare.csv", "csv", "header");
+  events = loadTable("assets/events.csv", "csv", "header");
   
 }
 
 function setup() {
   createCanvas(600, 600);
   
+  peace = 100;
+  chaos = 40;
   //generate family name
   for (let r = 0; r < people.getRowCount(); r++) {
     append(lastNames, people.getString(r, "lastNames"));
@@ -119,6 +131,9 @@ function setDecisions() {
   for (let r = 0; r < healthcare.getRowCount(); r++) {
     append(healthcareList, makeHealthcare(healthcare.getString(r, "Name"),int(healthcare.getString(r, "Cost")), int(healthcare.getString(r, "HealthBoost"))));
   }
+  for (let r = 0; r < events.getRowCount(); r++) {
+    append(eventList, makeEvents(events.getString(r, "Event"),events.getString(r, "Good"),events.getString(r, "Evil"),events.getString(r, "Neutral"),int(events.getString(r, "Impact")), int(events.getString(r, "Self_Impact")), events.getString(r, "Stat"),events.getString(r, "Good1"),events.getString(r, "Good2"),events.getString(r, "Evil1"),events.getString(r, "Skill")));
+  }
 }
 
 
@@ -149,7 +164,17 @@ function draw() {
   text("Mental Health: " + mentalHealth, 10, (height-height/5)+75);
   text("Moves Left: " + moves, 10, (height-height/5)+90);
   text("Click Space to age up!", 10, (height-height/5)+105);
-  
+
+  //draw peace and chaos
+  text("Peace", 250, height-height/5 - 15);
+  text("Chaos", 250, (height-height/5)+105);
+  rect(325, 455, 25, 140, 20);
+
+  stroke(10);
+  fill(color("green"));
+  rect(325, 455 + chaos, 25, peace, 20);
+
+  //////////////////
   stroke(10);
   fill(220);
   // Makes buttons where the player can make decisions
@@ -159,6 +184,7 @@ function draw() {
   rect(width - width/3, (height-height/5)+50, 150, 20, 20);
   rect(width - width/3, (height-height/5)+75, 150, 20, 20);
   rect(width - width/3, (height-height/5)+100, 150, 20, 20);
+  
   fill(0);
   for (let b of buttons) {
     text(b.name,b.x,b.y);
@@ -169,16 +195,19 @@ function draw() {
   line(0,mouseY,width,mouseY);
   line(mouseX,0,mouseX,height);
   text(mouseX + "," + mouseY,10,10);
-  if (menuOn > -1) {
+  if ((menuOn > -1) && currentPrompt == -1) { //draws menu if there no active events
     drawMenu(buttons[menuOn]);
   }
+  if (currentPrompt != -1) { //draws active prompts
+    drawEvent(eventList[currentPrompt]);
+  }
   mouseWasPressedLastFrame = mouseIsPressed;
-
+  
 }
 
 function keyPressed() {
   // The player will age and a new random event will happen to them at that year
-  if ((key === ' ' || keyCode === 65) && health > 0) {
+  if (currentPrompt == -1 && (key === ' ' || keyCode === 65) && health > 0) {
     moves = 3;
     if(home != null) {
       money -= home.cost;
@@ -197,13 +226,12 @@ function keyPressed() {
     }
     if (age > 60) {
       health -= 1;
-      mentalHealth -= 1;
+      mentalHealth -= 1; //ages people to death
     }
     if (mentalHealth < 50) {
-      health -= 1;
+      health -= 1; // poor mental health may harm physical health
     }
     for (let r of relationShips) {
-
       if (r.status == "alive") {
         if (r.health == 0) {
           r.status = "dead";
@@ -224,16 +252,23 @@ function keyPressed() {
       }
       
     }
-    //print(health);
+    if (age > 5) { //once youre older than 5 you recieve events
+      if (floor(random(0,2)) == 1){
+        result = "";
+        answered = false;
+        currentPrompt = floor(random(0,eventList.length));
+      } else {
+        currentPrompt = -1; //50% chance nothing happens for a year
+      }
+    }
     print(skills);
-  }
-  
+  } 
 }
 
 function mouseClicked() {
   print(mouseX,mouseY);
   let cX = width - width/3;
-  if (mouseX > cX && mouseX < cX + 150) { 
+  if (mouseX > cX && mouseX < cX + 150) { //clicks on certain buttons
     
     if (mouseY > height-height/5 -25 && mouseY < (height-height/5 -25)+20){menuOn = 0}
     if (mouseY > height-height/5 && mouseY < (height-height/5)+20){menuOn = 1 }
@@ -244,7 +279,73 @@ function mouseClicked() {
   }
 }
 
-//draws the menus for 
+//draws the prompts
+function drawEvent(info) {
+  //buttons for events
+  stroke(10);
+  fill(220);
+  rect(150, 50, 300, 300, 20);
+  rect(160,115,200,12,20);
+  rect(160,130,200,12,20);
+  rect(160,145,200,12,20);
+  fill(0);
+  text("Event!",250,75);
+  //good evil and neutral option for events
+  text(info.event,170,100);
+  text(info.good,170,125);
+  text(info.evil,170,140);
+  text(info.neutral,170,155);
+  text("Result: ",160,200);
+  if((mouseIsPressed && !mouseWasPressedLastFrame) && result == "") {
+    if((mouseX > 160 && mouseX < 160+200 && mouseY > 115 && mouseY < 115 + 12)){
+      let statChange;
+      if(skills.includes(info.skill)) {
+        result = info.good1;//you passed the skill check
+        statChange = info.self_impact;
+      } else {
+        result = info.good2;//you failed the skill check
+        statChange = -info.self_impact;
+      }
+      switch (info.stat){ //certain stat changes based on ow you scored
+        case "Health":
+          health += statChange;
+          break;
+        case "Intelligence":
+          intelligence += statChange;
+          break;
+        case "Money":
+          money += statChange;
+          break;
+        case "Looks":
+          looks += statChange;
+          break;
+        case "Mental Health":
+          mentalhealth += statChange;
+          break;
+      }
+      print(result);
+      impactSociety(-info.impact,info.impact);//good options decrease chaos and increase peace
+    }
+    if((mouseX > 160 && mouseX < 160+200 && mouseY > 130 && mouseY < 130+ 12)){
+      result = info.evil1;
+      impactSociety(info.impact,-info.impact);//evil options increase chaos and decrease peace
+      print(result);
+    }
+    if((mouseX > 160 && mouseX < 160+200 && mouseY > 145 && mouseY < 145+ 12)){
+      result = "nothing happened" //neutral option basically skips an event
+      print(result);
+    }
+  }
+  text(result,160,215);
+  if (result != "") { //you can only close an event after answering
+    text("press 'Q' to close",160,230);
+    if (keyIsDown(81)) {
+      currentPrompt = -1;
+    }
+  }
+}
+
+//draws the menus for buttons
 function drawMenu(info) {
   
   stroke(10);
@@ -459,5 +560,38 @@ function checkSkills(skill){
       count++;
     }
   }
-  return count
+  return count;
+}
+
+// makes events for the player to respond to
+function makeEvents(event, good, evil, neutral, impact, self_impact, stat, good1, good2, evil1, skill){
+  return {
+    event:event, good:good, evil:evil, neutral:neutral, impact:impact, self_impact:self_impact, stat:stat, good1:good1, good2:good2, evil1:evil1, skill:skill
+  }
+}
+// this changes the peace and chaos levels in society
+function impactSociety(c,p) {
+  if (((peace+p) + (chaos+c) == 140)) {
+    peace += p;
+    chaos += c;
+    if(peace <= 0) { peace = 0;}
+    if(peace >= 140) { peace = 140;}
+    if(chaos <= 0) { chaos = 0;}
+    if(chaos >= 140) { chaos = 140;}
+    print(peace + chaos);
+  }
+  else if ((peace+p) + (chaos+c) > 140) { //this recursive call should insure that peace + chaos always equals 140
+    if (p > 0) {
+      impactSociety(c,p-1);
+    } else if (c > 0) {
+      impactSociety(c - 1,p);
+    }
+  }
+  else if ((peace+p) + (chaos+c) < 140) { //this recursive call should insure that peace + chaos always equals 140
+    if (p < 0) {
+      impactSociety(c,p+1);
+    } else if (c < 0) {
+      impactSociety(c+1,p);
+    }
+  }
 }
