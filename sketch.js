@@ -48,16 +48,6 @@ let mouseWasPressedLastFrame = false;
 let chaos;
 let peace;
 
-let scrollOffset = 0;
-let scrollSpeed = 15;
-let menuHeight = 300; // visible height of menu box
-
-let scrollbarX = 440;      // right side of menu box
-let scrollbarY = 90;       // top of scroll area
-let scrollbarW = 10;       // width of scrollbar
-let scrollbarH = 250;      // total height of scroll area
-let draggingScrollbar = false;
-
 function preload() {
   people = loadTable("assets/people.csv", "csv", "header");
   activities  = loadTable("assets/activities.csv", "csv", "header");
@@ -66,12 +56,20 @@ function preload() {
   homes = loadTable("assets/homes.csv", "csv", "header");
   healthcare = loadTable("assets/healthcare.csv", "csv", "header");
   events = loadTable("assets/events.csv", "csv", "header");
+  iconImgs = [
+    loadImage("icons/Education.png"),
+    loadImage("icons/Jobs.png"),
+    loadImage("icons/Activities.png"),
+    loadImage("icons/Relationships.png"),
+    loadImage("icons/Homes.png"),
+    loadImage("icons/Healthcare.png")
+  ];
   
 }
 
 function setup() {
-  createCanvas(600, 600);
-  
+  createCanvas(600, 840);
+  textFont("Helvetica");
   peace = 100;
   chaos = 40;
   //generate family name
@@ -120,7 +118,15 @@ function setup() {
   intelligence = int(random(10, 100));
   looks = int(random(10, 100));
   mentalHealth = int(random(10, 100));
-  buttons = [{name:"Jobs 16+",x:(width - width/3)+55, y:(height-height/5)-10},{name:"Relationships",x:(width - width/3)+40, y:(height-height/5)+15}, {name:"Activities",x:(width - width/3)+50, y:(height-height/5)+40}, {name:"Education 5+",x:(width - width/3)+45, y:(height-height/5)+65}, {name:"Homes 18+",x:(width - width/3)+55, y:(height-height/5)+90}, {name:"Healthcare",x:(width - width/3)+50, y:(height-height/5)+115}];
+  
+  buttons = [
+  { name: "Education(5+)", x: 0, y: 0, w: 0, h: 0 },   // index 0
+  { name: "Jobs(16+)",      x: 0, y: 0, w: 0, h: 0 },   // index 1
+  { name: "Activities",     x: 0, y: 0, w: 0, h: 0 },   // index 2
+  { name: "Relationships",  x: 0, y: 0, w: 0, h: 0 },   // index 3
+  { name: "Homes(18+)",     x: 0, y: 0, w: 0, h: 0 },   // index 4
+  { name: "Healthcare",     x: 0, y: 0, w: 0, h: 0 }    // index 5
+  ];
 }
 
 
@@ -148,63 +154,20 @@ function setDecisions() {
 
 
 function draw() {
-  background(255);
-  fill(220);
-  rect(0,height-height/4,width,height/4);
-  fill(0);
-  stroke(0);
-  //players stats which change troughout the game. The game ends if thhe players health reaches 0
-  if (job != null){
-    text("Job: " + job.name, 10, height-height/5 - 60);
+  background("#121212");
+  textSize(345)
+  if (gender == "Male") {
+    text("🧍", 300, 125);
   } else {
-    text("Unemployed", 10, height-height/5 - 60);
+    text("🧍‍♀️", 300, 125);
   }
-  if (home != null){
-    text("Home: " + home.type, 10, height-height/5 - 45);
-  } else {
-    text("Home: " + "with parents", 10, height-height/5 - 45);
-  }
-  text("Skills: " + skills, 10, height-height/5 - 30);
-  text("Name: " + name, 10, height-height/5 - 15);
-  text("Age: " + age, 10, height-height/5);
-  text("Money: " + money, 10, (height-height/5)+15);
-  text("Health: " + health, 10, (height-height/5)+30);
-  text("Intelligence: " + intelligence, 10, (height-height/5)+45);
-  text("Looks: " + looks, 10, (height-height/5)+60);
-  text("Mental Health: " + mentalHealth, 10, (height-height/5)+75);
-  text("Moves Left: " + moves, 10, (height-height/5)+90);
-  text("Click Space to age up!", 10, (height-height/5)+105);
-
-  //draw peace and chaos
-  text("Peace", 250, height-height/5 - 15);
-  text("Chaos", 250, (height-height/5)+105);
-  rect(325, 455, 25, 140, 20);
-
-  stroke(10);
-  fill(color("green"));
-  rect(325, 455 + chaos, 25, peace, 20);
-
-  //////////////////
-  stroke(10);
-  fill(220);
-  // Makes buttons where the player can make decisions
-  rect(width - width/3, height-height/5 -25, 150, 20, 20);
-  rect(width - width/3, height-height/5, 150, 20, 20);
-  rect(width - width/3, (height-height/5)+25,150, 20, 20);
-  rect(width - width/3, (height-height/5)+50, 150, 20, 20);
-  rect(width - width/3, (height-height/5)+75, 150, 20, 20);
-  rect(width - width/3, (height-height/5)+100, 150, 20, 20);
+  fill("#1B253A");
+  rect(0,465,width,375);  
+  drawTopBar();
+  drawButtons();
+  drawStatsPanel();
   
-  fill(0);
-  for (let b of buttons) {
-    text(b.name,b.x,b.y);
-  }
-
   
-  //This wont be in the final game but can help find precise coordinates
-  line(0,mouseY,width,mouseY);
-  line(mouseX,0,mouseX,height);
-  text(mouseX + "," + mouseY,10,10);
   if ((menuOn > -1) && currentPrompt == -1) { //draws menu if there no active events
     drawMenu(buttons[menuOn]);
   }
@@ -212,8 +175,422 @@ function draw() {
     drawEvent(eventList[currentPrompt]);
   }
   mouseWasPressedLastFrame = mouseIsPressed;
+}
+
+function drawTopBar() {
+  noStroke();
+  fill("#1B253A");
+  rect(0, 0, width, 84);
+  
+  // player name
+  fill(255);
+  textAlign(LEFT, TOP);
+  textStyle(BOLD);
+  textSize(20);
+  text(name, 24, 20);
+  
+  // age + occupation
+  fill("#A2A2A2");
+  textAlign(LEFT, TOP);
+  textStyle(NORMAL);
+  textSize(16);
+  text("Age: " + age + ", Unemployed", 24, 44);
+  
+  // money
+  fill(255);
+  textAlign(RIGHT, TOP);
+  textStyle(BOLD);
+  textSize(20);
+  text("$" + money,width - 24, 20);
+  
+  fill("#A2A2A2");
+  textAlign(RIGHT, TOP);
+  textStyle(NORMAL);
+  textSize(16);
+  text("Bank Balance", width - 24, 44);
+}
+
+
+function drawButtons() {
+  fill("#104672");
+  rect(0,465 - 113,width,113);
+  drawIconButtons();
+}
+
+function drawMenu(info) {
+  push();   
+
+  const panelW = 340;
+  const panelX = (width - panelW) / 2;
+  const panelY = 80;
+  const rowGap = 18;
+  const headerHeight = 60;    // title area
+  const bottomPadding = 30;
+
+  // how many rows this menu will show
+  let listLength = 0;
+  if (menuOn === 0) listLength = eduList.length;          // Education
+  if (menuOn === 1) listLength = jobList.length;          // Jobs
+  if (menuOn === 2) listLength = actList.length;          // Activities
+  if (menuOn === 3) listLength = relationShips.length;    // Relationships
+  if (menuOn === 4) listLength = homeList.length;         // Homes
+  if (menuOn === 5) listLength = healthcareList.length;   // Healthcare
+
+  let contentHeight = listLength * rowGap;
+  let panelH = headerHeight + contentHeight + bottomPadding;
+
+  // keep panel on screen
+  const maxPanelH = height - panelY - 40;
+  if (panelH > maxPanelH) {
+    panelH = maxPanelH;
+  }
+
+  // do not show menu if out of moves
+  if (moves <= 0) {
+    menuOn = -1;
+    pop();
+    return;
+  }
+
+  // panel bg
+  stroke(10);
+  fill(220);
+  rect(panelX, panelY, panelW, panelH, 20);
+
+  // title
+  fill(0);
+  textAlign(CENTER, TOP);
+  textStyle(BOLD);
+  textSize(18);
+  text(info.name, panelX + panelW / 2, panelY + 18);
+
+  // reset style for list rows so nothing is bold
+  textStyle(NORMAL);
+  textSize(13);
+  textAlign(LEFT, TOP);
+
+  let baseX = panelX + 10;
+  let buttonX = panelX + panelW - 80;
+  let rowY = panelY + headerHeight;
+
+  // education
+  if (menuOn === 0) {
+    for (let r of eduList) {
+      text(r.name + " ; " + r.type + " ; " + r.difficulty, baseX, rowY);
+
+      fill(220);
+      rect(buttonX, rowY - 4, 50, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Study", buttonX + 25, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        age > 4 &&
+        (mouseIsPressed && !mouseWasPressedLastFrame) &&
+        mouseX > buttonX && mouseX < buttonX + 50 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        if (mentalHealth > 0) {
+          mentalHealth -= r.difficulty;
+          intelligence += r.difficulty;
+        }
+        append(skills, r.type);
+        moves -= 1;
+        break;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // jobs
+  else if (menuOn === 1) {
+    for (let r of jobList) {
+      text(r.name + " ; " + r.type + " ; " + r.difficulty, baseX, rowY);
+
+      fill(220);
+      rect(buttonX, rowY - 4, 60, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Apply", buttonX + 30, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        age > 15 &&
+        (mouseIsPressed && !mouseWasPressedLastFrame) &&
+        mouseX > buttonX && mouseX < buttonX + 60 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        if (checkSkills(r.type) >= r.difficulty) {
+          job = r;
+          print("youre hired for " + r.name);
+        }
+        moves -= 1;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // activities
+  else if (menuOn === 2) {
+    for (let r of actList) {
+      text(r.name + " ; " + r.type, baseX, rowY);
+
+      fill(220);
+      rect(buttonX, rowY - 4, 50, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Join", buttonX + 25, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        (mouseIsPressed && !mouseWasPressedLastFrame) &&
+        mouseX > buttonX && mouseX < buttonX + 50 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        append(skills, r.type);
+        moves -= 1;
+        break;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // relationships
+  else if (menuOn === 3) {
+    for (let r of relationShips) {
+      text(
+        r.name + " ; " + r.relation + " ; " + r.age + " ; " + r.status,
+        baseX,
+        rowY
+      );
+
+      fill(220);
+      rect(buttonX, rowY - 4, 80, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Hang out", buttonX + 40, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        (mouseIsPressed && !mouseWasPressedLastFrame) &&
+        mouseX > buttonX && mouseX < buttonX + 80 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        if (mentalHealth < 100) {
+          mentalHealth += 1;
+        }
+        moves -= 1;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // homes
+  else if (menuOn === 4) {
+    for (let r of homeList) {
+      text(r.type + " ; " + r.properties + " ; " + r.cost, baseX, rowY);
+
+      fill(220);
+      rect(buttonX, rowY - 4, 50, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Rent", buttonX + 25, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        age > 17 &&
+        mouseIsPressed &&
+        mouseX > buttonX && mouseX < buttonX + 50 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        if (money >= r.cost) {
+          home = r;
+          print("got home");
+        }
+        moves -= 1;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // healthcare
+  else if (menuOn === 5) {
+    for (let r of healthcareList) {
+      text(
+        r.name + " ; Cost: " + r.cost + " ; HP: +" + r.healthBoost,
+        baseX,
+        rowY
+      );
+
+      fill(220);
+      rect(buttonX, rowY - 4, 60, 16, 20);
+      fill(0);
+      textAlign(CENTER, TOP);
+      text("Select", buttonX + 30, rowY - 2);
+      textAlign(LEFT, TOP);
+
+      if (
+        (mouseIsPressed && !mouseWasPressedLastFrame) &&
+        mouseX > buttonX && mouseX < buttonX + 60 &&
+        mouseY > rowY - 4 && mouseY < rowY + 12
+      ) {
+        if (money >= r.cost) {
+          money -= r.cost;
+          if (health < 100) {
+            health += r.healthBoost;
+            if (health > 100) health = 100;
+          }
+          print("Selected " + r.name + " - Health: " + health);
+        }
+        moves -= 1;
+      }
+      rowY += rowGap;
+    }
+  }
+
+  // close
+  if (menuOn !== -1) {
+    const closeSize = 22;
+    const closeX = panelX + panelW - closeSize - 10;
+    const closeY = panelY + 10;
+
+    fill(220);
+    ellipse(closeX + closeSize / 2, closeY + closeSize / 2, closeSize, closeSize);
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textStyle(BOLD);
+    text("X", closeX + closeSize / 2, closeY + closeSize / 2 + 1);
+
+    if (
+      mouseIsPressed &&
+      mouseX > closeX && mouseX < closeX + closeSize &&
+      mouseY > closeY && mouseY < closeY + closeSize
+    ) {
+      menuOn = -1;
+    }
+  }
+
+  pop();
+}
+
+function drawIconButtons() {
+  const btnW = 60;
+  const btnH = 60;
+  const spacing = 20;
+
+  const labels = [
+    "Education(5+)",
+    "Jobs(16+)",
+    "Activities",
+    "Relationships",
+    "Homes(18+)",
+    "Healthcare"
+  ];
+  // center all icons
+  const totalWidth = 6 * btnW + 5 * spacing;
+  const startX = (width - totalWidth) / 2;
+  const y = (465 - 113) + 20;  // icon top Y
+
+  textAlign(CENTER, TOP);
+  textSize(12);
+  fill(255);
+
+  for (let i = 0; i < 6; i++) {
+    const x = startX + i * (btnW + spacing);
+
+    // draw icon
+    image(iconImgs[i], x, y, btnW, btnH);
+
+    // draw label 8px below icon
+    text(labels[i], x + btnW / 2, y + btnH + 8);
+
+    // update hitbox
+    buttons[i].x = x;
+    buttons[i].y = y;
+    buttons[i].w = btnW;
+    buttons[i].h = btnH;
+  }
+}
+
+
+
+function drawStatsPanel() {
+  textAlign(CENTER, TOP);
+  textStyle(NORMAL);
+  textSize(16);
+  fill(255);
+  textStyle(BOLD);
+  text("📊 Your Stats", width / 2, 480);
+  
+  textStyle(NORMAL);
+
+  textAlign(CENTER, TOP);
+  textSize(14);
+  fill(255);
+  text("Moves left: " + moves, width / 2, 500);
+  
+  let clampVal = function(v) {
+    return constrain(v, 0, 100);
+  };
+  
+  let chaosPercent = clampVal((chaos / 140) * 100);
+  
+  // define stats objects
+  
+  let stats = [
+    { label: "Mental Health", value: clampVal(mentalHealth), icon: "🧠", color: "#00D6A0" },
+    { label: "Intelligence", value: clampVal(intelligence), icon: "🧬", color: "#FF9F1C" },
+    { label: "Health", value: clampVal(health), icon: "💪", color: "#FF4FBF" },
+    { label: "Looks", value: clampVal(looks), icon: "✨", color: "#FBE142" },
+    { label: "Chaos", value: chaosPercent, icon: "🔥", color: "#E60000" }
+  ];
+  
+  let firstRowY = 535;
+  let rowGap = 47;
+  let labelX = 25;
+  let barX = 25;
+  let barMaxWidth = width - 50;
+  let barHeight = 8;
+  let percentX = width - 32;
+
+  // draw progress bar
+  for (let i = 0; i < stats.length; i++) {
+    let s = stats[i];
+    let y = firstRowY + i * rowGap;
+
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    fill(255);
+    text(s.icon + " " + s.label, labelX, y);
+
+    textAlign(RIGHT, CENTER);
+    fill("#D0D0D0");
+    text(Math.round(s.value) + "%", percentX, y);
+
+    let barY = y + 15;
+    noStroke();
+    fill("#24324B");
+    rect(barX, barY, barMaxWidth, barHeight, 4);
+
+    fill(s.color);
+    let w = (barMaxWidth * s.value) / 100;
+    rect(barX, barY, w, barHeight, 4);
+  }
+  
+  // draw text
+  textAlign(LEFT, CENTER);
+  textSize(14);
+  fill(255);
+  text("Skills: " + skills, 25, 775);
+
+  textAlign(CENTER, TOP);
+  textSize(13);
+  fill("#CCCCCC");
+  text("Press Space to Age Up", width / 2, 800);
   
 }
+
 
 function keyPressed() {
   // The player will age and a new random event will happen to them at that year
@@ -275,95 +652,96 @@ function keyPressed() {
   } 
 }
 
+// updated mouse click to support new menus
 function mouseClicked() {
-  print(mouseX,mouseY);
-  let cX = width - width/3;
-  if (mouseX > cX && mouseX < cX + 150) { //clicks on certain buttons
-    
-    if (mouseY > height-height/5 -25 && mouseY < (height-height/5 -25)+20){menuOn = 0}
-    if (mouseY > height-height/5 && mouseY < (height-height/5)+20){menuOn = 1 }
-    if (mouseY > height-height/5 +25 && mouseY < (height-height/5 +25)+20) {menuOn = 2 }
-    if (mouseY > height-height/5 +50 && mouseY < (height-height/5 +50)+20) {menuOn = 3 }
-    if (mouseY > height-height/5 +75&& mouseY < (height-height/5 +75)+20) {menuOn = 4}
-    if (mouseY > height-height/5 +100&& mouseY < (height-height/5 +100)+20) {menuOn = 5}
-  }
-}
+  if (currentPrompt !== -1) return;
+  if (moves <= 0) return;
 
-function mouseWheel(event) {
-  if (menuOn !== -1) {
-    let clipH = menuHeight - 50;
-
-    // calculate space for this menu
-    let space = 0;
-    if (menuOn == 0) space = jobList.length * 15;
-    if (menuOn == 1) space = relationShips.length * 15;
-    if (menuOn == 2) space = actList.length * 15;
-    if (menuOn == 3) space = eduList.length * 15;
-    if (menuOn == 4) space = homeList.length * 15;
-    if (menuOn == 5) space = healthcareList.length * 15;
-
-    let overflow = space > (clipH - 30);
-
-    if (overflow) {
-      scrollOffset += event.delta / 2;
-      scrollOffset = constrain(scrollOffset, 0, space - (clipH - 30));
+  for (let i = 0; i < buttons.length; i++) {
+    const b = buttons[i];
+    if (
+      mouseX > b.x && mouseX < b.x + b.w &&
+      mouseY > b.y && mouseY < b.y + b.h
+    ) {
+      menuOn = i;
+      scrollOffset = 0;
+      break;
     }
   }
 }
 
 
-function mousePressed() {
-  // Check if clicking on scrollbar
-  if (
-    mouseX > scrollbarX && mouseX < scrollbarX + scrollbarW &&
-    mouseY > scrollbarY && mouseY < scrollbarY + scrollbarH
-  ) {
-    draggingScrollbar = true;
-  }
-}
-
-function mouseReleased() {
-  draggingScrollbar = false;
-}
-
-function inside(mx, my, x, y, w, h) {
-  return mx > x && mx < x + w && my > y && my < y + h;
-}
-
-function mouseJustClicked() {
-  return (mouseIsPressed && !mouseWasPressedLastFrame);
-}
-
-
-
 //draws the prompts
 function drawEvent(info) {
+  push();
+
+  // panel layout 
+  const panelW = 340;
+  const panelX = (width - panelW) / 2;
+  const panelY = 80;
+  const headerHeight = 60;
+  const panelH = 230; 
+
+  // option layout
+  const optionX = panelX + 10;
+  const optionW = panelW - 20;
+  const optionH = 20;
+  const optionGap = 6;
+  const firstOptionY = panelY + headerHeight + 20;
+
   //buttons for events
   stroke(10);
   fill(220);
-  rect(150, 50, 300, 300, 20);
-  rect(160,115,200,12,20);
-  rect(160,130,200,12,20);
-  rect(160,145,200,12,20);
+  rect(panelX, panelY, panelW, panelH, 20);
+
+  // option hit areas
+  rect(optionX, firstOptionY, optionW, optionH, 8);
+  rect(optionX, firstOptionY + optionH + optionGap, optionW, optionH, 8);
+  rect(optionX, firstOptionY + 2 * (optionH + optionGap), optionW, optionH, 8);
+
   fill(0);
-  text("Event!",250,75);
+  textFont("Helvetica");
+
+  // title
+  textAlign(CENTER, TOP);
+  textSize(18);
+  text("Event!", panelX + panelW / 2, panelY + 16);
+
   //good evil and neutral option for events
-  text(info.event,170,100);
-  text(info.good,170,125);
-  text(info.evil,170,140);
-  text(info.neutral,170,155);
-  text("Result: ",160,200);
-  if((mouseIsPressed && !mouseWasPressedLastFrame) && result == "") {
-    if((mouseX > 160 && mouseX < 160+200 && mouseY > 115 && mouseY < 115 + 12)){
+  textAlign(LEFT, TOP);
+  textSize(13);
+
+  const textMarginX = optionX + 10;
+
+  // event description (wrapped inside panel)
+  text(info.event, textMarginX, panelY + headerHeight - 10, panelW - 20, 40);
+
+  // options text
+  text(info.good, textMarginX, firstOptionY + 3);
+  text(info.evil, textMarginX, firstOptionY + optionH + optionGap + 3);
+  text(info.neutral, textMarginX, firstOptionY + 2 * (optionH + optionGap) + 3);
+
+  const resultLabelY = firstOptionY + 3 * (optionH + optionGap) + 20;
+  text("Result: ", textMarginX, resultLabelY);
+
+  // click handling 
+  if ((mouseIsPressed && !mouseWasPressedLastFrame) && result == "") {
+
+    // GOOD OPTION
+    if (
+      mouseX > optionX && mouseX < optionX + optionW &&
+      mouseY > firstOptionY && mouseY < firstOptionY + optionH
+    ) {
       let statChange;
-      if(skills.includes(info.skill)) {
-        result = info.good1;//you passed the skill check
+      if (skills.includes(info.skill)) {
+        result = info.good1; //you passed the skill check
         statChange = info.self_impact;
       } else {
-        result = info.good2;//you failed the skill check
+        result = info.good2; //you failed the skill check
         statChange = -info.self_impact;
       }
-      switch (info.stat){ //certain stat changes based on ow you scored
+
+      switch (info.stat) { //certain stat changes based on ow you scored
         case "Health":
           health += statChange;
           break;
@@ -377,240 +755,49 @@ function drawEvent(info) {
           looks += statChange;
           break;
         case "Mental Health":
-          mentalhealth += statChange;
+          mentalHealth += statChange; 
           break;
       }
       print(result);
-      impactSociety(-info.impact,info.impact);//good options decrease chaos and increase peace
+      impactSociety(-info.impact, info.impact); //good options decrease chaos and increase peace
     }
-    if((mouseX > 160 && mouseX < 160+200 && mouseY > 130 && mouseY < 130+ 12)){
+
+    // EVIL OPTION
+    const secondY = firstOptionY + optionH + optionGap;
+    if (
+      mouseX > optionX && mouseX < optionX + optionW &&
+      mouseY > secondY && mouseY < secondY + optionH
+    ) {
       result = info.evil1;
-      impactSociety(info.impact,-info.impact);//evil options increase chaos and decrease peace
+      impactSociety(info.impact, -info.impact); //evil options increase chaos and decrease peace
       print(result);
     }
-    if((mouseX > 160 && mouseX < 160+200 && mouseY > 145 && mouseY < 145+ 12)){
-      result = "nothing happened" //neutral option basically skips an event
+
+    // NEUTRAL OPTION
+    const thirdY = firstOptionY + 2 * (optionH + optionGap);
+    if (
+      mouseX > optionX && mouseX < optionX + optionW &&
+      mouseY > thirdY && mouseY < thirdY + optionH
+    ) {
+      result = "nothing happened"; //neutral option basically skips an event
       print(result);
     }
   }
-  text(result,160,215);
+
+  // result body
+  text(result, textMarginX, resultLabelY + 15, panelW - 20, 60);
+
   if (result != "") { //you can only close an event after answering
-    text("press 'Q' to close",160,230);
+    text("press 'Q' to close", textMarginX, resultLabelY + 40);
     if (keyIsDown(81)) {
       currentPrompt = -1;
-    }
-  }
-}
-
-//draws the menus for buttons
-function drawMenu(info) {
-
-  stroke(10);
-  fill(220);
-  rect(150, 50, 300, 300, 20);
-  fill(0);
-  text(info.name,250,75);
-
-  if (moves <= 0){
-    menuOn = -1;
-  }
-
-  // ----- START CLIPPING -----
-  push();
-  let clipX = 150;
-  let clipY = 90;
-  let clipW = 300;
-  let clipH = menuHeight - 50;
-
-  // Clip inner list area
-  drawingContext.save();
-  drawingContext.beginPath();
-  drawingContext.rect(clipX, clipY, clipW, clipH);
-  drawingContext.clip();
-
-  let space = 0;
-  let startY = 100 - scrollOffset;
-
-  // Draw list depending on menu
-  if (menuOn == 0) {        
-    for (let r of jobList) {
-      drawMenuItemJob(r, startY + space);
-      space += 15;
-    }
-  }
-  if (menuOn == 1) {        
-    for (let r of relationShips) {
-      drawMenuItemRelationship(r, startY + space);
-      space += 15;
-    }
-  }
-  if (menuOn == 2) {        
-    for (let r of actList) {
-      drawMenuItemActivity(r, startY + space);
-      space += 15;
-    }
-  }
-  if (menuOn == 3) {        
-    for (let r of eduList) {
-      drawMenuItemEducation(r, startY + space);
-      space += 15;
-    }
-  }
-  if (menuOn == 4) {        
-    for (let r of homeList) {
-      drawMenuItemHome(r, startY + space);
-      space += 15;
-    }
-  }
-  if (menuOn == 5) {        
-    for (let r of healthcareList) {
-      drawMenuItemHealthcare(r, startY + space);
-      space += 15;
+      result = "";
     }
   }
 
-  // total scrollable size
-  let totalContent = space;
-  let visibleHeight = clipH - 30;
-
-  let overflow = totalContent > visibleHeight;
-
-  // Limit scroll only if overflow exists
-  if (overflow) {
-    scrollOffset = constrain(scrollOffset, 0, totalContent - visibleHeight);
-  } else {
-    scrollOffset = 0; // disable scrolling when not needed
-  }
-
-  drawingContext.restore();
   pop();
-
-  // ----- SCROLLBAR -----
-  if (overflow) {
-    // ratio of scroll
-    let scrollRatio = scrollOffset / (totalContent - visibleHeight);
-    scrollRatio = constrain(scrollRatio, 0, 1);
-
-    // thumb size
-    let viewRatio = visibleHeight / totalContent;
-    let thumbH = max(30, scrollbarH * viewRatio);
-
-    // thumb position
-    let thumbY = scrollbarY + (scrollbarH - thumbH) * scrollRatio;
-
-    // track
-    fill(200);
-    rect(scrollbarX, scrollbarY, scrollbarW, scrollbarH, 5);
-
-    // thumb
-    fill(120);
-    rect(scrollbarX, thumbY, scrollbarW, thumbH, 5);
-
-    // dragging behavior
-    if (draggingScrollbar) {
-      let newRatio = (mouseY - scrollbarY - thumbH / 2) / (scrollbarH - thumbH);
-      newRatio = constrain(newRatio, 0, 1);
-      scrollOffset = newRatio * (totalContent - visibleHeight);
-    }
-  }
-  // If no overflow, do NOT draw scrollbar at all.
-
-  // ----- CLOSE BUTTON -----
-  if (menuOn != -1) {
-    fill(220);
-    rect(415,60,20,20,20);
-    fill(0);
-    text("X", 420, 75);
-    if(mouseIsPressed && inside(mouseX,mouseY,415,60,20,20)) {
-        menuOn = -1;
-        scrollOffset = 0;
-    }
-  }
 }
 
-
-function drawMenuItemJob(r, y) {
-  text(r.name + " ; " + r.type + " ; " + r.difficulty,160,y);
-  fill(220);
-  rect(370,y-11,60,12,20);
-  fill(0);
-  text("Apply", 380, y);
-
-  if(age > 15 && mouseJustClicked() && inside(mouseX,mouseY,370,y-11,60,12)) {
-    if (checkSkills(r.type) >= r.difficulty) job = r;
-    moves -= 1;
-  }
-}
-
-function drawMenuItemRelationship(r, y) {
-  text(r.name + " ; " + r.relation + " ; " + r.age + " ; " + r.status,160,y);
-  fill(220);
-  rect(370,y-11,70,12,20);
-  fill(0);
-  text("Hang out", 380, y);
-
-  if(mouseJustClicked() && inside(mouseX,mouseY,370,y-11,70,12)) {
-    if (mentalHealth < 100) mentalHealth += 1;
-    moves -= 1;
-  }
-}
-
-function drawMenuItemActivity(r, y) {
-  text(r.name + " ; " + r.type,160,y);
-  fill(220);
-  rect(370,y-11,40,12,20);
-  fill(0);
-  text("Join", 380, y);
-
-  if(mouseJustClicked() && inside(mouseX,mouseY,370,y-11,40,12)) {
-    append(skills, r.type);
-    moves -= 1;
-  }
-}
-
-function drawMenuItemEducation(r, y) {
-  text(r.name + " ; " + r.type + " ; " + r.difficulty,160,y);
-  fill(220);
-  rect(370,y-11,40,12,20);
-  fill(0);
-  text("Study", 380, y);
-
-  if(age > 4 && mouseJustClicked() && inside(mouseX,mouseY,370,y-11,40,12)) {
-    mentalHealth -= r.difficulty;
-    intelligence += r.difficulty;
-    append(skills, r.type);
-    moves -= 1;
-  }
-}
-
-function drawMenuItemHome(r, y) {
-  text(r.type + " ; " + r.properties + " ; " + r.cost,160,y);
-  fill(220);
-  rect(370,y-11,40,12,20);
-  fill(0);
-  text("Rent", 380, y);
-
-  if(age > 17 && mouseJustClicked() && inside(mouseX,mouseY,370,y-11,40,12)) {
-    if (money >= r.cost) home = r;
-    moves -= 1;
-  }
-}
-
-function drawMenuItemHealthcare(r, y) {
-  text(r.name + " ; Cost: " + r.cost + " ; HP: +" + r.healthBoost,160,y);
-  fill(220);
-  rect(370,y-11,50,12,20);
-  fill(0);
-  text("Select", 380, y);
-
-  if(mouseJustClicked() && inside(mouseX,mouseY,370,y-11,50,12)) {
-    if (money >= r.cost) {
-      money -= r.cost;
-      health = min(100, health + r.healthBoost);
-    }
-    moves -= 1;
-  }
-}
 
 // creates people to interact with the player
 function makePerson(age, money, health, intelligence, looks, mentalHealth, relation, name, status) {
