@@ -52,11 +52,11 @@ const UIConfig = {
    * @type {{name: string, x: number, y: number, w: number, h: number}[]}
    */
   buttons: [
-    { name: "education (5+)", x: 0, y: 0, w: 0, h: 0 },
-    { name: "jobs (16+)", x: 0, y: 0, w: 0, h: 0 },
-    { name: "activities", x: 0, y: 0, w: 0, h: 0 },
-    { name: "relationships", x: 0, y: 0, w: 0, h: 0 },
-    { name: "homes (18+)", x: 0, y: 0, w: 0, h: 0 },
-    { name: "healthcare", x: 0, y: 0, w: 0, h: 0 }
+    { name: "Education (5+)", x: 0, y: 0, w: 0, h: 0 },
+    { name: "Jobs (16+)", x: 0, y: 0, w: 0, h: 0 },
+    { name: "Activities", x: 0, y: 0, w: 0, h: 0 },
+    { name: "Relationships", x: 0, y: 0, w: 0, h: 0 },
+    { name: "Homes (18+)", x: 0, y: 0, w: 0, h: 0 },
+    { name: "Healthcare", x: 0, y: 0, w: 0, h: 0 }
   ]
 };
