@@ -1,15 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/addons/p5.sound.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <meta charset="utf-8" />
-
-  </head>
-  <body>
-    <main>
-    </main>
-    <script src="sketch.js"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Simulator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    
+    <!-- Load in order: data structures first, then dependencies, then main -->
+    <script src="js/data/GameData.js"></script>
+    <script src="js/data/PlayerState.js"></script>
+    <script src="js/data/GameState.js"></script>
+    <script src="js/data/UIConfig.js"></script>
+    
+    <script src="js/factories/EntityFactory.js"></script>
+    <script src="js/utils/UIHelper.js"></script>
+    
+    <script src="js/loaders/DataLoader.js"></script>
+    <script src="js/logic/GameLogic.js"></script>
+    
+    <script src="js/renderers/Renderer.js"></script>
+    <script src="js/renderers/MenuRenderer.js"></script>
+    <script src="js/renderers/EventRenderer.js"></script>
+    
+    <script src="js/input/InputHandler.js"></script>
+    
+    <script src="js/main.js"></script>
+</head>
+<body>
+</body>
 </html>
