@@ -260,15 +260,15 @@ const MenuRenderer = {
     for (let r of GameData.lists.relationShips) {
       text(r.name + " ; " + r.relation + " ; " + r.age + " ; " + r.status, baseX, rowY);
 
-      let hovered = UIHelper.inside(mouseX, mouseY, buttonX, rowY - 4, 80, 16);
+      let hovered = UIHelper.inside(mouseX, mouseY, buttonX - 20, rowY - 4, 80, 16);
       if (hovered && mouseIsPressed) fill(150);
       else if (hovered) fill(180);
       else fill(220);
-      rect(buttonX, rowY - 4, 80, 16, 20);
+      rect(buttonX - 20, rowY - 4, 80, 16, 20);
 
       fill(0);
       textAlign(CENTER, TOP);
-      text("Hang out", buttonX + 40, rowY - 2);
+      text("Hang out", buttonX+20, rowY - 2);
       textAlign(LEFT, TOP);
 
       if (UIHelper.mouseJustClicked() && hovered) {
